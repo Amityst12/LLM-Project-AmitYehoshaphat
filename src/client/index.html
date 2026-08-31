@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Tribunal — Multi-Agent Deliberation System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <span class="logo-icon">⚖️</span>
+        <div>
+          <h1 class="app-title">THE TRIBUNAL</h1>
+          <p class="app-subtitle">Multi-Agent Adversarial Deliberation & Unmerged Adjudication</p>
+        </div>
+      </div>
+      <div class="budget-badge" id="header-budget-badge">
+        <span class="budget-label">Circuit Breaker:</span>
+        <span class="budget-value" id="header-budget-value">$0.0000 / $5.00</span>
+        <span class="status-indicator status-active" id="header-circuit-status" title="Circuit Breaker Normal"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Left Column: Input & Configuration -->
+    <section class="panel config-panel">
+      <div class="panel-header">
+        <h2>1. Charge Sheet & Configuration</h2>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-load-sample">Load Sample Dilemma</button>
+      </div>
+
+      <form id="charge-sheet-form">
+        <!-- Defendant -->
+        <div class="form-group">
+          <div class="label-row">
+            <label for="defendant-input">The Defendant <span class="required">*</span></label>
+            <span class="char-count" id="defendant-char-count">0 / 500</span>
+          </div>
+          <input
+            type="text"
+            id="defendant-input"
+            class="form-control"
+            maxlength="500"
+            placeholder="e.g. Autonomous Vehicle AI System v4.2"
+            required
+          />
+          <div class="field-error" id="defendant-error"></div>
+        </div>
+
+        <!-- The Act -->
+        <div class="form-group">
+          <div class="label-row">
+            <label for="act-input">The Alleged Act <span class="required">*</span></label>
+            <span class="char-count" id="act-char-count">0 / 500</span>
+          </div>
+          <textarea
+            id="act-input"
+            class="form-control"
+            rows="3"
+            maxlength="500"
+            placeholder="Describe the specific conduct, decision, or breach under evaluation..."
+            required
+          ></textarea>
+          <div class="field-error" id="act-error"></div>
+        </div>
+
+        <!-- The Question -->
+        <div class="form-group">
+          <div class="label-row">
+            <label for="question-input">The Exact Legal / Ethical Question <span class="required">*</span></label>
+            <span class="char-count" id="question-char-count">0 / 500</span>
+          </div>
+          <textarea
+            id="question-input"
+            class="form-control"
+            rows="2"
+            maxlength="500"
+            placeholder="Formulate the precise question of culpability, liability, or moral justification..."
+            required
+          ></textarea>
+          <div class="field-error" id="question-error"></div>
+        </div>
+
+        <!-- N-Version Model Selector Toggle -->
+        <div class="nversion-section">
+          <div class="nversion-header">
+            <div>
+              <span class="nversion-title">Model Configuration Mode</span>
+              <p class="nversion-desc">Toggle between single uniform model or diverse per-agent assignments (SC-5)</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="nversion-toggle" />
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <!-- Uniform Model Selection -->
+          <div id="uniform-model-container" class="model-selection-group">
+            <label for="uniform-model-select">Uniform Model for All 7 Agents</label>
+            <select id="uniform-model-select" class="form-control model-select">
+              <option value="google/gemini-2.0-flash-001">Google Gemini 2.0 Flash ($0.10 / $0.40 per 1M)</option>
+              <option value="google/gemini-2.0-flash-lite-preview-02-05:free">Google Gemini 2.0 Flash Lite (Free Tier)</option>
+              <option value="deepseek/deepseek-chat">DeepSeek Chat ($0.14 / $0.28 per 1M)</option>
+              <option value="openai/gpt-4o-mini">OpenAI GPT-4o Mini ($0.15 / $0.60 per 1M)</option>
+            </select>
+          </div>
+
+          <!-- Diverse N-Version Model Selection (Hidden by default) -->
+          <div id="nversion-models-container" class="model-selection-group hidden">
+            <h4 class="nversion-subheading">Advocate Models</h4>
+            <div class="grid-2">
+              <div class="agent-model-field">
+                <label for="model-pro_1">Pro 1 (Legalist)</label>
+                <select id="model-pro_1" class="form-control model-select"></select>
+              </div>
+              <div class="agent-model-field">
+                <label for="model-pro_2">Pro 2 (Utilitarian)</label>
+                <select id="model-pro_2" class="form-control model-select"></select>
+              </div>
+              <div class="agent-model-field">
+                <label for="model-con_1">Con 1 (Humanist)</label>
+                <select id="model-con_1" class="form-control model-select"></select>
+              </div>
+              <div class="agent-model-field">
+                <label for="model-con_2">Con 2 (Skeptic)</label>
+                <select id="model-con_2" class="form-control model-select"></select>
+              </div>
+            </div>
+
+            <h4 class="nversion-subheading" style="margin-top: 12px;">Judicial Models</h4>
+            <div class="grid-3">
+              <div class="agent-model-field">
+                <label for="model-judge_1">Judge 1 (Formalist)</label>
+                <select id="model-judge_1" class="form-control model-select"></select>
+              </div>
+              <div class="agent-model-field">
+                <label for="model-judge_2">Judge 2 (Pragmatist)</label>
+                <select id="model-judge_2" class="form-control model-select"></select>
+              </div>
+              <div class="agent-model-field">
+                <label for="model-judge_3">Judge 3 (Moralist)</label>
+                <select id="model-judge_3" class="form-control model-select"></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-submit">
+          <span class="btn-text">Commence Multi-Agent Deliberation</span>
+          <span class="btn-spinner hidden" id="submit-spinner"></span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Right Column: Live Pipeline & Results -->
+    <section class="panel results-panel">
+      <!-- Pipeline Stepper -->
+      <div class="stepper-card">
+        <div class="stepper-step" id="step-case">
+          <span class="step-icon">1</span>
+          <span class="step-label">Charge Sheet</span>
+        </div>
+        <div class="stepper-line" id="line-1"></div>
+        <div class="stepper-step" id="step-advocates">
+          <span class="step-icon">2</span>
+          <span class="step-label">4 Advocates (∥)</span>
+        </div>
+        <div class="stepper-line" id="line-2"></div>
+        <div class="stepper-step" id="step-judges">
+          <span class="step-icon">3</span>
+          <span class="step-label">3 Judges (∥)</span>
+        </div>
+        <div class="stepper-line" id="line-3"></div>
+        <div class="stepper-step" id="step-verdicts">
+          <span class="step-icon">4</span>
+          <span class="step-label">Unmerged Protocol</span>
+        </div>
+      </div>
+
+      <!-- Real-Time Economics & Budget Bar -->
+      <div class="economics-card" id="economics-card">
+        <div class="economics-header">
+          <h3>Agent Economics & Audit Dashboard</h3>
+          <span class="badge badge-outline" id="pipeline-status-badge">Idle</span>
+        </div>
+        <div class="budget-progress-wrapper">
+          <div class="budget-labels">
+            <span>Cumulative Spend: <strong id="spent-text">$0.0000</strong></span>
+            <span>Hard Ceiling: <strong>$5.0000 USD</strong></span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="budget-progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <span class="metric-label">Total Cost</span>
+            <span class="metric-val" id="metric-cost">$0.0000</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Total Tokens</span>
+            <span class="metric-val" id="metric-tokens">0</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Total Latency</span>
+            <span class="metric-val" id="metric-latency">0 ms</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Active Agents</span>
+            <span class="metric-val" id="metric-agents">7</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unmerged Protocol View (3 Judicial Verdicts) -->
+      <div class="verdicts-section" id="verdicts-section">
+        <div class="section-title-row">
+          <h3>Unmerged Protocol: Independent Judicial Verdicts</h3>
+          <span class="badge badge-info">3 Non-Fused Rulings ($V_1, V_2, V_3$)</span>
+        </div>
+        <div class="verdicts-grid" id="verdicts-grid">
+          <!-- Populated dynamically via JS -->
+          <div class="empty-state">Submit a case above to initiate adversarial debate and judicial deliberation.</div>
+        </div>
+      </div>
+
+      <!-- Advocate Arguments Archive -->
+      <div class="advocates-section" id="advocates-section">
+        <div class="section-title-row">
+          <h3>Adversarial Arguments (4 Parallel Advocates)</h3>
+          <span class="badge badge-outline">2 Pro / 2 Con Personas</span>
+        </div>
+        <div class="advocates-grid" id="advocates-grid">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>The Tribunal &bull; Agentic Software Engineering Methodology &bull; Strict $5.00 Circuit Breaker &bull; Unmerged Protocol</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
