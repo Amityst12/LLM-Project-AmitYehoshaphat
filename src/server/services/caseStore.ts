@@ -1,4 +1,4 @@
-import { CaseData, ChargeSheet } from '../types/tribunal.js';
+import { AdvocateResponse, CaseData, ChargeSheet, JudgeVerdict } from '../types/tribunal.js';
 
 /**
  * In-memory case store for development and testing.
@@ -8,15 +8,32 @@ class CaseStore {
   private cases: Map<string, CaseData> = new Map();
 
   public saveCase(id: string, chargeSheet: ChargeSheet): CaseData {
+    const existing = this.cases.get(id);
     const caseData: CaseData = {
       id,
       defendant: chargeSheet.defendant,
       act: chargeSheet.act,
       question: chargeSheet.question,
-      createdAt: new Date().toISOString(),
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
+      advocates: existing?.advocates,
+      verdicts: existing?.verdicts,
     };
     this.cases.set(id, caseData);
     return caseData;
+  }
+
+  public saveAdvocates(id: string, advocates: AdvocateResponse[]): CaseData | undefined {
+    const existing = this.cases.get(id);
+    if (!existing) return undefined;
+    existing.advocates = advocates;
+    return existing;
+  }
+
+  public saveVerdicts(id: string, verdicts: JudgeVerdict[]): CaseData | undefined {
+    const existing = this.cases.get(id);
+    if (!existing) return undefined;
+    existing.verdicts = verdicts;
+    return existing;
   }
 
   public getCase(id: string): CaseData | undefined {
