@@ -3,6 +3,7 @@ import {
   OpenRouterCompletionResult,
   TokenUsage,
 } from '../types/tribunal.js';
+import { circuitBreaker } from '../utils/circuitBreaker.js';
 
 export const DEFAULT_MODEL = 'google/gemini-2.0-flash-001';
 export const DEFAULT_TIMEOUT_MS = 30_000;
@@ -66,6 +67,9 @@ export class OpenRouterService {
   public async completeChat(
     params: OpenRouterCompletionParams,
   ): Promise<OpenRouterCompletionResult> {
+    // 1. Enforce budget ceiling (Mitigation P2)
+    circuitBreaker.enforceBudget();
+
     const key = this.apiKey ?? process.env.OPENROUTER_API_KEY;
     if (!key) {
       throw new Error(
@@ -133,6 +137,9 @@ export class OpenRouterService {
         tokens.promptTokens,
         tokens.completionTokens,
       );
+
+      // 2. Record cost in circuit breaker tracker
+      circuitBreaker.recordCost(costUsd);
 
       return {
         content,

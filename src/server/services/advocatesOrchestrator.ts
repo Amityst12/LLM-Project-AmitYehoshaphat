@@ -6,6 +6,7 @@ import {
 } from '../types/tribunal.js';
 import { ADVOCATE_PERSONAS, buildAdvocateMessages } from '../prompts/advocates.js';
 import { OpenRouterService, openRouterService } from './openrouter.js';
+import { circuitBreaker, CircuitBreakerError } from '../utils/circuitBreaker.js';
 
 export interface OrchestratorOptions {
   modelMap?: Partial<Record<AdvocateRole, string>>;
@@ -25,6 +26,9 @@ export async function runAdvocatesOrchestration(
   chargeSheet: ChargeSheet,
   options: OrchestratorOptions = {},
 ): Promise<AdvocatesOrchestrationResult> {
+  // Pre-check economic circuit breaker before launching batch (Mitigation P2)
+  circuitBreaker.enforceBudget();
+
   const service = options.openRouter ?? openRouterService;
   const startTime = performance.now();
 
@@ -53,6 +57,10 @@ export async function runAdvocatesOrchestration(
         status: 'success',
       };
     } catch (err: unknown) {
+      if (err instanceof CircuitBreakerError) {
+        throw err;
+      }
+
       const latencyMs = Math.round(performance.now() - roleStartTime);
       const errorMessage = err instanceof Error ? err.message : 'Unknown advocate error';
 

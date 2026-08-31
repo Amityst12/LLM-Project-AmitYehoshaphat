@@ -8,6 +8,7 @@ import {
 import { JUDGE_PERSONAS, buildJudgeMessages } from '../prompts/judges.js';
 import { parseJudgeVerdict } from '../utils/verdictParser.js';
 import { OpenRouterService, openRouterService } from './openrouter.js';
+import { circuitBreaker, CircuitBreakerError } from '../utils/circuitBreaker.js';
 
 export interface JudgeOrchestratorOptions {
   modelMap?: Partial<Record<JudgeId, string>>;
@@ -28,6 +29,9 @@ export async function runJudgesOrchestration(
   advocates: AdvocateResponse[],
   options: JudgeOrchestratorOptions = {},
 ): Promise<DeliberationResult> {
+  // Pre-check economic circuit breaker before launching judicial deliberation (Mitigation P2)
+  circuitBreaker.enforceBudget();
+
   const service = options.openRouter ?? openRouterService;
   const startTime = performance.now();
 
@@ -59,6 +63,10 @@ export async function runJudgesOrchestration(
         status: 'success',
       };
     } catch (err: unknown) {
+      if (err instanceof CircuitBreakerError) {
+        throw err;
+      }
+
       const latencyMs = Math.round(performance.now() - judgeStartTime);
       const errorMessage = err instanceof Error ? err.message : 'Unknown judge error';
 

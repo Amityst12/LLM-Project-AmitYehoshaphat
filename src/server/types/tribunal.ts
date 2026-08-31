@@ -52,8 +52,33 @@ export interface ChargeSheet {
 export interface CaseData extends ChargeSheet {
   id: string;
   createdAt: string;
+  status?: string;
   advocates?: AdvocateResponse[];
   verdicts?: JudgeVerdict[];
+}
+
+export interface AuditLogEntry {
+  id?: string;
+  caseId: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  totalLatencyMs: number;
+  totalCostUsd: number;
+  agentCount: number;
+  pipelineStatus: 'completed' | 'partial_failure' | 'failed';
+  createdAt?: string;
+}
+
+export interface CaseFullDetails extends CaseData {
+  audit?: AuditLogEntry;
+}
+
+export interface BudgetStatus {
+  totalSpentUsd: number;
+  maxBudgetUsd: number;
+  remainingBudgetUsd: number;
+  isTripped: boolean;
 }
 
 export interface AdvocatesOrchestrationResult {

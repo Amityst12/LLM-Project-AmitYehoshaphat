@@ -1,48 +1,54 @@
-import { AdvocateResponse, CaseData, ChargeSheet, JudgeVerdict } from '../types/tribunal.js';
+import {
+  AdvocateResponse,
+  AuditLogEntry,
+  CaseData,
+  CaseFullDetails,
+  ChargeSheet,
+  JudgeVerdict,
+} from '../types/tribunal.js';
+import { supabaseStore } from './supabaseStore.js';
 
 /**
- * In-memory case store for development and testing.
- * (Will integrate with Supabase in persistence iteration).
+ * Case Store facade providing unified access across synchronous in-memory & async Supabase operations.
  */
 class CaseStore {
-  private cases: Map<string, CaseData> = new Map();
-
   public saveCase(id: string, chargeSheet: ChargeSheet): CaseData {
-    const existing = this.cases.get(id);
-    const caseData: CaseData = {
+    // Synchronously write to in-memory store and fire async DB write
+    void supabaseStore.saveCase(id, chargeSheet);
+    return {
       id,
       defendant: chargeSheet.defendant,
       act: chargeSheet.act,
       question: chargeSheet.question,
-      createdAt: existing?.createdAt ?? new Date().toISOString(),
-      advocates: existing?.advocates,
-      verdicts: existing?.verdicts,
+      status: 'created',
+      createdAt: new Date().toISOString(),
     };
-    this.cases.set(id, caseData);
-    return caseData;
   }
 
-  public saveAdvocates(id: string, advocates: AdvocateResponse[]): CaseData | undefined {
-    const existing = this.cases.get(id);
-    if (!existing) return undefined;
-    existing.advocates = advocates;
-    return existing;
+  public saveAdvocates(id: string, advocates: AdvocateResponse[]): void {
+    void supabaseStore.saveAdvocates(id, advocates);
   }
 
-  public saveVerdicts(id: string, verdicts: JudgeVerdict[]): CaseData | undefined {
-    const existing = this.cases.get(id);
-    if (!existing) return undefined;
-    existing.verdicts = verdicts;
-    return existing;
+  public saveVerdicts(id: string, verdicts: JudgeVerdict[]): void {
+    void supabaseStore.saveVerdicts(id, verdicts);
   }
 
-  public getCase(id: string): CaseData | undefined {
-    return this.cases.get(id);
+  public saveAuditLog(audit: AuditLogEntry): void {
+    void supabaseStore.saveAuditLog(audit);
+  }
+
+  public async getCaseAsync(id: string): Promise<CaseFullDetails | undefined> {
+    return supabaseStore.getCase(id);
+  }
+
+  public async getAuditLogAsync(id: string): Promise<AuditLogEntry | undefined> {
+    return supabaseStore.getAuditLog(id);
   }
 
   public clear(): void {
-    this.cases.clear();
+    supabaseStore.clear();
   }
 }
 
 export const caseStore = new CaseStore();
+export { supabaseStore };
