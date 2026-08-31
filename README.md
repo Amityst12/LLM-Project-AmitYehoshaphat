@@ -4,9 +4,10 @@
 > Built strictly under the **[AGENTS.md](AGENTS.md)** Operating Contract using Test-Driven Development (TDD), Verification Gates, and Multi-Agent Orchestration.
 
 [![TypeScript Strict](https://img.shields.io/badge/TypeScript-5.x_Strict-blue.svg)](tsconfig.json)
-[![Tests Passing](https://img.shields.io/badge/Tests-78%2F78_Passing-success.svg)](tests/)
+[![Tests Passing](https://img.shields.io/badge/Tests-79%2F79_Passing-success.svg)](tests/)
 [![Coverage](https://img.shields.io/badge/Coverage-86.7%25_Lines-brightgreen.svg)](tests/)
 [![Circuit Breaker](https://img.shields.io/badge/Circuit_Breaker-%245.00_USD_Hard_Ceiling-orange.svg)](src/server/utils/circuitBreaker.ts)
+[![Compliance](https://img.shields.io/badge/Course_Compliance-14%2F14_PASS-brightgreen.svg)](scripts/verify-course-compliance.mjs)
 [![Deployment](https://img.shields.io/badge/Deploy-Netlify_Serverless-00AD9F.svg)](netlify.toml)
 
 ---
@@ -38,7 +39,7 @@ flowchart TD
     end
 
     subgraph Layer3["3. Multi-Agent AI Gateway (OpenRouter)"]
-        OR["src/server/services/openrouter.ts\n• Gemini 2.0 Flash / DeepSeek / GPT-4o-mini\n• Token & Latency Economics\n• 30s Timeout with AbortController"]
+        OR["src/server/services/openrouter.ts\n• Gemini 2.0 Flash / DeepSeek / GPT-4o-mini\n• Offline Demo Simulation Support\n• Token & Latency Economics\n• 30s Timeout with AbortController"]
         subgraph Advocates["4 Parallel Advocates (SC-2)"]
             P1["Pro 1: Deontologist / Legalist"]
             P2["Pro 2: Utilitarian / Consequentialist"]
@@ -109,16 +110,19 @@ The repository strictly enforces automated quality gates before every commit via
 ```bash
 npm run verify
 # Executes: npm run lint && npm run build && npm test && npm run test:int
+
+# Automated course scorecard audit
+npm run verify:compliance
 ```
 
-### Test Suite Summary (78 Tests Passing):
-* **Unit Tests (58 tests):**
+### Test Suite Summary (79 Tests Passing):
+* **Unit Tests (59 tests):**
   * `tests/unit/chargeSheet.test.ts` (14 tests) — SC-1 validation contracts
   * `tests/unit/advocates.test.ts` (10 tests) — SC-2 personas & prompt injection
   * `tests/unit/judges.test.ts` (13 tests) — SC-3 unmerged protocol & JSON parsing
   * `tests/unit/circuitBreaker.test.ts` (6 tests) — $5.00 budget ceiling enforcement
   * `tests/unit/auditTrail.test.ts` (7 tests) — 7-agent persistence & metrics
-  * `tests/unit/openrouter.test.ts` (5 tests) — API Gateway, timeouts, pricing calculations
+  * `tests/unit/openrouter.test.ts` (6 tests) — API Gateway, offline simulation, timeouts, pricing
   * `tests/unit/serverlessHandler.test.ts` (3 tests) — Netlify Lambda execution
 * **Integration Tests (20 tests):**
   * `tests/integration/casesRoute.test.ts` (5 tests) — POST /api/cases

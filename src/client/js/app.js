@@ -136,6 +136,10 @@ async function fetchModels() {
         availableModels = data.data;
         populateModelDropdowns();
       }
+      if (data.simulationMode) {
+        const badge = document.getElementById('demo-mode-badge');
+        if (badge) badge.classList.remove('hidden');
+      }
     }
   } catch {
     populateModelDropdowns();

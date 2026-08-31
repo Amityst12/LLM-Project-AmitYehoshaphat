@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'node:path';
 import { casesRouter } from './routes/cases.js';
 import { circuitBreaker } from './utils/circuitBreaker.js';
-import { MODEL_PRICING } from './services/openrouter.js';
+import { MODEL_PRICING, openRouterService } from './services/openrouter.js';
 
 const app = express();
 
@@ -46,6 +46,7 @@ app.get('/api/models', (_req, res) => {
   res.json({
     success: true,
     data: models,
+    simulationMode: openRouterService.isSimulationMode(),
   });
 });
 

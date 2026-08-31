@@ -16,19 +16,50 @@ describe('OpenRouterService (Unit)', () => {
     process.env.OPENROUTER_API_KEY = originalEnv;
   });
 
-  it('should throw an explicit error when OPENROUTER_API_KEY is missing', async () => {
+  it('should detect simulation mode when API key is missing or placeholder', () => {
+    const service1 = new OpenRouterService(undefined);
     delete process.env.OPENROUTER_API_KEY;
-    const service = new OpenRouterService(undefined, 'https://mock.api');
+    expect(service1.isSimulationMode()).toBe(true);
 
-    await expect(
-      service.completeChat({
-        messages: [{ role: 'user', content: 'test' }],
-      }),
-    ).rejects.toThrow('OPENROUTER_API_KEY is not set');
+    const service2 = new OpenRouterService('mock');
+    expect(service2.isSimulationMode()).toBe(true);
+
+    const service3 = new OpenRouterService('live-custom-key-12345');
+    expect(service3.isSimulationMode()).toBe(false);
   });
 
-  it('should successfully complete chat and calculate tokens and latency', async () => {
-    const service = new OpenRouterService('test-key', 'https://mock.api');
+  it('should generate rich deterministic completions in simulation mode without network calls', async () => {
+    const service = new OpenRouterService('mock');
+
+    // Advocate Pro 1 simulation test
+    const advocateResult = await service.completeChat({
+      messages: [
+        { role: 'system', content: 'You are Advocate Pro 1: "The Deontologist / Legalist".' },
+        { role: 'user', content: '<charge_sheet><defendant>TestCo</defendant></charge_sheet>' },
+      ],
+    });
+
+    expect(advocateResult.content).toContain('TestCo');
+    expect(advocateResult.content).toContain('duty');
+    expect(advocateResult.tokens.totalTokens).toBeGreaterThan(0);
+    expect(advocateResult.costUsd).toBeGreaterThanOrEqual(0);
+
+    // Judge 1 simulation test (JSON output)
+    const judgeResult = await service.completeChat({
+      messages: [
+        { role: 'system', content: 'You are Judge 1: "The Textualist / Formalist".' },
+        { role: 'user', content: '<charge_sheet><defendant>TestCo</defendant></charge_sheet>' },
+      ],
+    });
+
+    const parsed = JSON.parse(judgeResult.content);
+    expect(parsed.verdict).toBe('guilty');
+    expect(parsed.reasoning).toContain('Textualist');
+    expect(Array.isArray(parsed.dissent_points)).toBe(true);
+  });
+
+  it('should successfully complete chat via fetch in live mode and calculate tokens and latency', async () => {
+    const service = new OpenRouterService('live-custom-key', 'https://mock.api');
 
     const mockResponseData = {
       model: 'google/gemini-2.0-flash-001',
@@ -60,7 +91,7 @@ describe('OpenRouterService (Unit)', () => {
     expect(requestInit?.method).toBe('POST');
     expect(requestInit?.headers).toEqual(
       expect.objectContaining({
-        Authorization: 'Bearer test-key',
+        Authorization: 'Bearer live-custom-key',
         'Content-Type': 'application/json',
       }),
     );
@@ -76,8 +107,8 @@ describe('OpenRouterService (Unit)', () => {
     );
   });
 
-  it('should handle missing usage data gracefully with fallback to 0', async () => {
-    const service = new OpenRouterService('test-key', 'https://mock.api');
+  it('should handle missing usage data gracefully with fallback to 0 in live mode', async () => {
+    const service = new OpenRouterService('live-custom-key', 'https://mock.api');
 
     const mockResponseData = {
       choices: [{ message: { content: 'No usage provided' } }],
@@ -97,8 +128,8 @@ describe('OpenRouterService (Unit)', () => {
     expect(result.costUsd).toBe(0);
   });
 
-  it('should throw formatted error on HTTP error response from OpenRouter', async () => {
-    const service = new OpenRouterService('test-key', 'https://mock.api');
+  it('should throw formatted error on HTTP error response from OpenRouter in live mode', async () => {
+    const service = new OpenRouterService('live-custom-key', 'https://mock.api');
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response('Rate limit exceeded', { status: 429 }),
@@ -111,8 +142,8 @@ describe('OpenRouterService (Unit)', () => {
     ).rejects.toThrow('OpenRouter API error (status 429): Rate limit exceeded');
   });
 
-  it('should throw clear timeout error on abort', async () => {
-    const service = new OpenRouterService('test-key', 'https://mock.api');
+  it('should throw clear timeout error on abort in live mode', async () => {
+    const service = new OpenRouterService('live-custom-key', 'https://mock.api');
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, options) => {
       return new Promise((_resolve, reject) => {
