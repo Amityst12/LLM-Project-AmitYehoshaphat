@@ -1,0 +1,27 @@
+# ==========================================================
+# Netlify Configuration — The Tribunal
+# ==========================================================
+
+[build]
+  command = "npm run build"
+  publish = "src/client"
+  functions = "netlify/functions"
+
+# Route API calls to the serverless function handler
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/health"
+  to = "/.netlify/functions/api/health"
+  status = 200
+  force = true
+
+# Single Page App fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
